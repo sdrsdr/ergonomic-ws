@@ -1,5 +1,5 @@
 {
-  "name": "ws",
+  "name": "ergonomic-ws",
   "version": "8.2.3",
   "description": "Simple to use, blazing fast and thoroughly tested websocket client and server for Node.js",
   "keywords": [
@@ -10,9 +10,9 @@
     "WebSockets",
     "real-time"
   ],
-  "homepage": "https://github.com/websockets/ws",
-  "bugs": "https://github.com/websockets/ws/issues",
-  "repository": "websockets/ws",
+  "homepage": "https://github.com/sdrsdr/ergonomic-ws",
+  "bugs": "https://github.com/sdrsdr/ergonomic-ws/issues",
+  "repository": "sdrsdr/ergonomic-ws",
   "author": "Einar Otto Stangvik <einaros@gmail.com> (http://2x.io)",
   "license": "MIT",
   "main": "index.js",
@@ -28,7 +28,8 @@
     "browser.js",
     "index.js",
     "lib/*.js",
-    "wrapper.mjs"
+    "wrapper.mjs",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "nyc --reporter=lcov --reporter=text mocha --throw-deprecation test/*.test.js",

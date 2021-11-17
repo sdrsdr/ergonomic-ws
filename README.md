@@ -4,6 +4,8 @@
 [![CI](https://img.shields.io/github/workflow/status/websockets/ws/CI/master?label=CI&logo=github)](https://github.com/websockets/ws/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage Status](https://img.shields.io/coveralls/websockets/ws/master.svg?logo=coveralls)](https://coveralls.io/github/websockets/ws)
 
+A shameless ripoff from the original ws library with some ergonomics around incomming connection filtrations plus embeded typescript defenitions.
+
 ws is a simple to use, blazing fast, and thoroughly tested WebSocket client and
 server implementation.
 
