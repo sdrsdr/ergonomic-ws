@@ -359,6 +359,39 @@ describe('WebSocket', () => {
       });
     });
 
+    describe('`isPaused`', () => {
+      it('is enumerable and configurable', () => {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          WebSocket.prototype,
+          'isPaused'
+        );
+
+        assert.strictEqual(descriptor.configurable, true);
+        assert.strictEqual(descriptor.enumerable, true);
+        assert.ok(descriptor.get !== undefined);
+        assert.ok(descriptor.set === undefined);
+      });
+
+      it('indicates whether the websocket is paused', (done) => {
+        const wss = new WebSocket.Server({ port: 0 }, () => {
+          const ws = new WebSocket(`ws://localhost:${wss.address().port}`);
+
+          ws.on('open', () => {
+            ws.pause();
+            assert.ok(ws.isPaused);
+
+            ws.resume();
+            assert.ok(!ws.isPaused);
+
+            ws.close();
+            wss.close(done);
+          });
+
+          assert.ok(!ws.isPaused);
+        });
+      });
+    });
+
     describe('`protocol`', () => {
       it('is enumerable and configurable', () => {
         const descriptor = Object.getOwnPropertyDescriptor(
@@ -1028,6 +1061,53 @@ describe('WebSocket', () => {
         ws.on('close', () => done());
       });
     });
+
+    it('emits an error if the redirect URL is invalid (1/2)', (done) => {
+      const onUpgrade = (req, socket) => {
+        socket.end('HTTP/1.1 302 Found\r\nLocation: ws://\r\n\r\n');
+      };
+
+      server.on('upgrade', onUpgrade);
+
+      const ws = new WebSocket(`ws://localhost:${server.address().port}`, {
+        followRedirects: true
+      });
+
+      ws.on('open', () => done(new Error("Unexpected 'open' event")));
+      ws.on('error', (err) => {
+        assert.ok(err instanceof SyntaxError);
+        assert.strictEqual(err.message, 'Invalid URL: ws://');
+        assert.strictEqual(ws._redirects, 1);
+
+        server.removeListener('upgrade', onUpgrade);
+        ws.on('close', () => done());
+      });
+    });
+
+    it('emits an error if the redirect URL is invalid (2/2)', (done) => {
+      const onUpgrade = (req, socket) => {
+        socket.end('HTTP/1.1 302 Found\r\nLocation: http://localhost\r\n\r\n');
+      };
+
+      server.on('upgrade', onUpgrade);
+
+      const ws = new WebSocket(`ws://localhost:${server.address().port}`, {
+        followRedirects: true
+      });
+
+      ws.on('open', () => done(new Error("Unexpected 'open' event")));
+      ws.on('error', (err) => {
+        assert.ok(err instanceof SyntaxError);
+        assert.strictEqual(
+          err.message,
+          'The URL\'s protocol must be one of "ws:", "wss:", or "ws+unix:"'
+        );
+        assert.strictEqual(ws._redirects, 1);
+
+        server.removeListener('upgrade', onUpgrade);
+        ws.on('close', () => done());
+      });
+    });
   });
 
   describe('Connection with query string', () => {
@@ -1058,6 +1138,51 @@ describe('WebSocket', () => {
 
       wss.on('connection', (ws) => {
         ws.close();
+      });
+    });
+  });
+
+  describe('#pause', () => {
+    it('does nothing if `readyState` is `CONNECTING` or `CLOSED`', (done) => {
+      const wss = new WebSocket.Server({ port: 0 }, () => {
+        const ws = new WebSocket(`ws://localhost:${wss.address().port}`);
+
+        assert.strictEqual(ws.readyState, WebSocket.CONNECTING);
+        assert.ok(!ws.isPaused);
+
+        ws.pause();
+        assert.ok(!ws.isPaused);
+
+        ws.on('open', () => {
+          ws.on('close', () => {
+            assert.strictEqual(ws.readyState, WebSocket.CLOSED);
+
+            ws.pause();
+            assert.ok(!ws.isPaused);
+
+            wss.close(done);
+          });
+
+          ws.close();
+        });
+      });
+    });
+
+    it('pauses the socket', (done) => {
+      const wss = new WebSocket.Server({ port: 0 }, () => {
+        const ws = new WebSocket(`ws://localhost:${wss.address().port}`);
+      });
+
+      wss.on('connection', (ws) => {
+        assert.ok(!ws.isPaused);
+        assert.ok(!ws._socket.isPaused());
+
+        ws.pause();
+        assert.ok(ws.isPaused);
+        assert.ok(ws._socket.isPaused());
+
+        ws.terminate();
+        wss.close(done);
       });
     });
   });
@@ -1396,6 +1521,58 @@ describe('WebSocket', () => {
 
       wss.on('connection', (ws) => {
         ws.close();
+      });
+    });
+  });
+
+  describe('#resume', () => {
+    it('does nothing if `readyState` is `CONNECTING` or `CLOSED`', (done) => {
+      const wss = new WebSocket.Server({ port: 0 }, () => {
+        const ws = new WebSocket(`ws://localhost:${wss.address().port}`);
+
+        assert.strictEqual(ws.readyState, WebSocket.CONNECTING);
+        assert.ok(!ws.isPaused);
+
+        // Verify that no exception is thrown.
+        ws.resume();
+
+        ws.on('open', () => {
+          ws.pause();
+          assert.ok(ws.isPaused);
+
+          ws.on('close', () => {
+            assert.strictEqual(ws.readyState, WebSocket.CLOSED);
+
+            ws.resume();
+            assert.ok(ws.isPaused);
+
+            wss.close(done);
+          });
+
+          ws.terminate();
+        });
+      });
+    });
+
+    it('resumes the socket', (done) => {
+      const wss = new WebSocket.Server({ port: 0 }, () => {
+        const ws = new WebSocket(`ws://localhost:${wss.address().port}`);
+      });
+
+      wss.on('connection', (ws) => {
+        assert.ok(!ws.isPaused);
+        assert.ok(!ws._socket.isPaused());
+
+        ws.pause();
+        assert.ok(ws.isPaused);
+        assert.ok(ws._socket.isPaused());
+
+        ws.resume();
+        assert.ok(!ws.isPaused);
+        assert.ok(!ws._socket.isPaused());
+
+        ws.close();
+        wss.close(done);
       });
     });
   });
