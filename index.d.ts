@@ -36,6 +36,8 @@ declare class WebSocket extends events.EventEmitter {
     CLOSING: number;
     CLOSED: number;
 
+    isPaused:boolean;
+
     onopen: (event: WebSocket.OpenEvent) => void;
     onerror: (event: WebSocket.ErrorEvent) => void;
     onclose: (event: WebSocket.CloseEvent) => void;
@@ -50,6 +52,8 @@ declare class WebSocket extends events.EventEmitter {
     send(data: any, cb?: (err?: Error) => void): void;
     send(data: any, options: { mask?: boolean; binary?: boolean; compress?: boolean; fin?: boolean }, cb?: (err?: Error) => void): void;
     terminate(): void;
+    pause():void;
+    resume():void;
 
     // HTML5 WebSocket events
     addEventListener(method: 'message', cb?: (event: { data: any; type: string; target: WebSocket }) => void): void;
@@ -145,6 +149,7 @@ declare namespace WebSocket {
         pfx?: string | Buffer;
         ca?: CertMeta;
         maxPayload?: number;
+        generateMask?(buffer_to_fill:Buffer):void;
     }
 
     interface PerMessageDeflateOptions {
