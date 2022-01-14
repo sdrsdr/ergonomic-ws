@@ -91,7 +91,7 @@ must be provided or an error is thrown. An HTTP server is automatically created,
 started, and used if `port` is set. To use an external HTTP/S server instead,
 specify only `server` or `noServer`. In this case the HTTP/S server must be
 started manually. The "noServer" mode allows the WebSocket server to be
-completly detached from the HTTP/S server. This makes it possible, for example,
+completely detached from the HTTP/S server. This makes it possible, for example,
 to share a single HTTP/S server between multiple WebSocket servers.
 
 > **NOTE:** Use of `verifyClient` is discouraged. Rather handle client
@@ -99,7 +99,7 @@ to share a single HTTP/S server between multiple WebSocket servers.
 > more details.
 
 If `verifyClient` is not set then the handshake is automatically accepted. If it
-is provided with a single argument then that is:
+has a single parameter then `ws` will invoke it with the following argument:
 
 - `info` {Object}
   - `origin` {String} The value in the Origin header indicated by the client.
@@ -110,7 +110,8 @@ is provided with a single argument then that is:
 The return value (`Boolean`) of the function determines whether or not to accept
 the handshake.
 
-if `verifyClient` is provided with two arguments then those are:
+If `verifyClient` has two parameters then `ws` will invoke it with the following
+arguments:
 
 - `info` {Object} Same as above.
 - `cb` {Function} A callback that must be called by the user upon inspection of
