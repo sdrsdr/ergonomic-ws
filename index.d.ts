@@ -17,6 +17,8 @@ import * as net from 'net';
 import * as url from 'url';
 import * as zlib from 'zlib';
 
+
+
 // WebSocket socket.
 declare class WebSocket extends events.EventEmitter {
     static CONNECTING: number;
@@ -104,6 +106,10 @@ declare class WebSocket extends events.EventEmitter {
 }
 
 declare namespace WebSocket {
+    interface  WebSocketConstructor {
+        new(address: string | url.URL, options?: WebSocket.ClientOptions):WebSocket;
+        new(address: string | url.URL, protocols?: string | string[], options?: WebSocket.ClientOptions):WebSocket;
+    }
     /**
      * Data represents the message payload received over the WebSocket.
      */
@@ -209,6 +215,7 @@ declare namespace WebSocket {
         clientTracking?: boolean;
         perMessageDeflate?: boolean | PerMessageDeflateOptions;
         maxPayload?: number;
+        WebSocket?:WebSocketConstructor;
     }
 
     interface AddressInfo {
