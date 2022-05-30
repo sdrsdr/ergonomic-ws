@@ -25,7 +25,6 @@
     "node": ">=10.0.0"
   },
   "files": [
-    "browser.js",
     "index.js",
     "lib/*.js",
     "wrapper.mjs",
