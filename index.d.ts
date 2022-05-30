@@ -13,7 +13,8 @@
 import * as events from 'events';
 import * as http from 'http';
 import * as https from 'https';
-import * as net from 'net';
+import type {Socket} from 'net';
+import type {Socket as TLSSocket} from 'tls';
 import * as url from 'url';
 import * as zlib from 'zlib';
 
@@ -83,6 +84,7 @@ declare class WebSocket extends events.EventEmitter {
     on(event: 'message', listener: (this: WebSocket, data: WebSocket.Data) => void): this;
     on(event: 'open' , listener: (this: WebSocket) => void): this;
     on(event: 'ping' | 'pong', listener: (this: WebSocket, data: Buffer) => void): this;
+    on(event: 'redirect', listener: (this: WebSocket, url: string, request:http.ClientRequest) => void): this;
     on(event: 'unexpected-response', listener: (this: WebSocket, request: http.ClientRequest, response: http.IncomingMessage) => void): this;
     on(event: string | symbol, listener: (this: WebSocket, ...args: any[]) => void): this;
 
@@ -92,6 +94,7 @@ declare class WebSocket extends events.EventEmitter {
     addListener(event: 'message', listener: (data: WebSocket.Data) => void): this;
     addListener(event: 'open' , listener: () => void): this;
     addListener(event: 'ping' | 'pong', listener: (data: Buffer) => void): this;
+    addListener(event: 'redirect', listener: (url: string, request:http.ClientRequest) => void): this;
     addListener(event: 'unexpected-response', listener: (request: http.ClientRequest, response: http.IncomingMessage) => void): this;
     addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
@@ -101,6 +104,7 @@ declare class WebSocket extends events.EventEmitter {
     removeListener(event: 'message', listener: (data: WebSocket.Data) => void): this;
     removeListener(event: 'open' , listener: () => void): this;
     removeListener(event: 'ping' | 'pong', listener: (data: Buffer) => void): this;
+    removeListener(event: 'redirect', listener: (url: string, request:http.ClientRequest) => void): this;
     removeListener(event: 'unexpected-response', listener: (request: http.ClientRequest, response: http.IncomingMessage) => void): this;
     removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 }
@@ -234,21 +238,23 @@ declare namespace WebSocket {
 
         address(): AddressInfo | string;
         close(cb?: (err?: Error) => void): void;
-        handleUpgrade(request: http.IncomingMessage, socket: net.Socket,
+        handleUpgrade(request: http.IncomingMessage, socket: Socket|TLSSocket,
             upgradeHead: Buffer, callback?: (client: WebSocket) => void): void;
         shouldHandle(request: http.IncomingMessage): boolean;
 
         // Events
-        on(event: 'connection', cb: (this: WebSocket, socket: WebSocket, request: http.IncomingMessage) => void): this;
-        on(event: 'error', cb: (this: WebSocket, error: Error) => void): this;
-        on(event: 'headers', cb: (this: WebSocket, headers: string[], request: http.IncomingMessage,reject_connection:(errcode:number, extraHeaders?:string[])=>void) => void): this;
-        on(event: 'listening', cb: (this: WebSocket) => void): this;
-        on(event: string | symbol, listener: (this: WebSocket, ...args: any[]) => void): this;
+        on(event: 'connection', cb: (this: WebSocket.Server, socket: WebSocket, request: http.IncomingMessage) => void): this;
+        on(event: 'error', cb: (this: WebSocket.Server, error: Error) => void): this;
+        on(event: 'headers', cb: (this: WebSocket.Server, headers: string[], request: http.IncomingMessage,reject_connection:(errcode:number, extraHeaders?:string[])=>void) => void): this;
+        on(event: 'listening', cb: (this: WebSocket.Server) => void): this;
+        on(event: 'wsClientError', cb: (this:WebSocket.Server,err:Error, socket:Socket|TLSSocket, request:http.IncomingMessage)=>void): this;
+        on(event: string | symbol, listener: (this: WebSocket.Server, ...args: any[]) => void): this;
 
         addListener(event: 'connection', cb: (client: WebSocket, request: http.IncomingMessage) => void): this;
         addListener(event: 'error', cb: (err: Error) => void): this;
         addListener(event: 'headers', cb: (headers: string[], request: http.IncomingMessage,reject_connection:(errcode:number, extraHeaders?:string[])=>void) => void): this;
         addListener(event: 'listening', cb: () => void): this;
+        addListener(event: 'wsClientError', cb: (err:Error, socket:Socket|TLSSocket, request:http.IncomingMessage)=>void): this;
         addListener(event: string | symbol, listener: (...args: any[]) => void): this;
     }
 }

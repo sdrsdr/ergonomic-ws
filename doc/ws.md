@@ -9,6 +9,7 @@
   - [Event: 'error'](#event-error)
   - [Event: 'headers'](#event-headers)
   - [Event: 'listening'](#event-listening)
+  - [Event: 'wsClientError'](event-wsclienterror)
   - [server.address()](#serveraddress)
   - [server.clients](#serverclients)
   - [server.close([callback])](#serverclosecallback)
@@ -24,6 +25,7 @@
   - [Event: 'open'](#event-open)
   - [Event: 'ping'](#event-ping)
   - [Event: 'pong'](#event-pong)
+  - [Event: 'redirect'](#event-redirect)
   - [Event: 'unexpected-response'](#event-unexpected-response)
   - [Event: 'upgrade'](#event-upgrade)
   - [websocket.addEventListener(type, listener[, options])](#websocketaddeventlistenertype-listener-options)
@@ -72,7 +74,8 @@ This class represents a WebSocket server. It extends the `EventEmitter`.
   - `handleProtocols` {Function} A function which can be used to handle the
     WebSocket subprotocols. See description below.
   - `host` {String} The hostname where to bind the server.
-  - `maxPayload` {Number} The maximum allowed message size in bytes.
+  - `maxPayload` {Number} The maximum allowed message size in bytes. Defaults to
+    100 MiB (104857600 bytes).
   - `noServer` {Boolean} Enable no server mode.
   - `path` {String} Accept only connections matching this path.
   - `perMessageDeflate` {Boolean|Object} Enable/disable permessage-deflate.
@@ -200,6 +203,21 @@ handshake. This allows you to inspect/modify the headers before they are sent.
 
 Emitted when the underlying server has been bound.
 
+### Event: 'wsClientError'
+
+- `error` {Error}
+- `socket` {net.Socket|tls.Socket}
+- `request` {http.IncomingMessage}
+
+Emitted when an error occurs before the WebSocket connection is established.
+`socket` and `request` are respectively the socket and the HTTP request from
+which the error originated. The listener of this event is responsible for
+closing the socket. When the `'wsClientError'` event is emitted there is no
+`http.ServerResponse` object, so any HTTP response, including the response
+headers and body, must be written directly to the `socket`. If there is no
+listener for this event, the socket is closed with a default 4xx response
+containing a descriptive error message.
+
 ### server.address()
 
 Returns an object with `port`, `family`, and `address` properties specifying the
@@ -228,7 +246,8 @@ receives an `Error` if the server is already closed.
 ### server.handleUpgrade(request, socket, head, callback)
 
 - `request` {http.IncomingMessage} The client HTTP GET request.
-- `socket` {net.Socket} The network socket between the server and client.
+- `socket` {net.Socket|tls.Socket} The network socket between the server and
+  client.
 - `head` {Buffer} The first packet of the upgraded stream.
 - `callback` {Function}.
 
@@ -279,7 +298,8 @@ This class represents a WebSocket. It extends the `EventEmitter`.
     cryptographically strong random bytes.
   - `handshakeTimeout` {Number} Timeout in milliseconds for the handshake
     request. This is reset after every redirection.
-  - `maxPayload` {Number} The maximum allowed message size in bytes.
+  - `maxPayload` {Number} The maximum allowed message size in bytes. Defaults to
+    100 MiB (104857600 bytes).
   - `maxRedirects` {Number} The maximum number of redirects allowed. Defaults
     to 10.
   - `origin` {String} Value of the `Origin` or `Sec-WebSocket-Origin` header
@@ -289,7 +309,7 @@ This class represents a WebSocket. It extends the `EventEmitter`.
   - `skipUTF8Validation` {Boolean} Specifies whether or not to skip UTF-8
     validation for text and close messages. Defaults to `false`. Set to `true`
     only if the server is trusted.
-  - Any other option allowed in [http.request()][] or [https.request()][].
+  - Any other option allowed in [`http.request()`][] or [`https.request()`][].
     Options given do not have any effect if parsed from the URL given with the
     `address` parameter.
 
@@ -358,6 +378,19 @@ Emitted when a ping is received from the server.
 - `data` {Buffer}
 
 Emitted when a pong is received from the server.
+
+### Event: 'redirect'
+
+- `url` {String}
+- `request` {http.ClientRequest}
+
+Emitted before a redirect is followed. `url` is the redirect URL. `request` is
+the HTTP GET request with the headers queued. This event gives the ability to
+inspect confidential headers and remove them on a per-redirect basis using the
+[`request.getHeader()`][] and [`request.removeHeader()`][] API. The `request`
+object should be used only for this purpose. When there is at least one listener
+for this event, no header is removed by default, even if the redirect is to a
+different domain.
 
 ### Event: 'unexpected-response'
 
@@ -537,7 +570,7 @@ state is `CONNECTING`.
 
 ### websocket.terminate()
 
-Forcibly close the connection. Internally this calls [socket.destroy()][].
+Forcibly close the connection. Internally this calls [`socket.destroy()`][].
 
 ### websocket.url
 
@@ -608,11 +641,14 @@ as configured by the `maxPayload` option.
 [concurrency-limit]: https://github.com/websockets/ws/issues/1202
 [duplex-options]:
   https://nodejs.org/api/stream.html#stream_new_stream_duplex_options
-[http.request()]:
+[`http.request()`]:
   https://nodejs.org/api/http.html#http_http_request_options_callback
-[https.request()]:
+[`https.request()`]:
   https://nodejs.org/api/https.html#https_https_request_options_callback
 [permessage-deflate]:
   https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-19
-[socket.destroy()]: https://nodejs.org/api/net.html#net_socket_destroy_error
+[`request.getheader()`]: https://nodejs.org/api/http.html#requestgetheadername
+[`request.removeheader()`]:
+  https://nodejs.org/api/http.html#requestremoveheadername
+[`socket.destroy()`]: https://nodejs.org/api/net.html#net_socket_destroy_error
 [zlib-options]: https://nodejs.org/api/zlib.html#zlib_class_options
