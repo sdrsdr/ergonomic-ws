@@ -9,7 +9,7 @@
   - [Event: 'error'](#event-error)
   - [Event: 'headers'](#event-headers)
   - [Event: 'listening'](#event-listening)
-  - [Event: 'wsClientError'](event-wsclienterror)
+  - [Event: 'wsClientError'](#event-wsclienterror)
   - [server.address()](#serveraddress)
   - [server.clients](#serverclients)
   - [server.close([callback])](#serverclosecallback)
@@ -49,7 +49,10 @@
   - [websocket.terminate()](#websocketterminate)
   - [websocket.url](#websocketurl)
 - [createWebSocketStream(websocket[, options])](#createwebsocketstreamwebsocket-options)
-- [WS Error Codes](#ws-error-codes)
+- [Environment variables](#environment-variables)
+  - [WS_NO_BUFFER_UTIL](#ws_no_buffer_util)
+  - [WS_NO_UTF_8_VALIDATE](#ws_no_utf_8_validate)
+- [Error codes](#error-codes)
   - [WS_ERR_EXPECTED_FIN](#ws_err_expected_fin)
   - [WS_ERR_EXPECTED_MASK](#ws_err_expected_mask)
   - [WS_ERR_INVALID_CLOSE_CODE](#ws_err_invalid_close_code)
@@ -353,7 +356,7 @@ been closed.
 - `error` {Error}
 
 Emitted when an error occurs. Errors may have a `.code` property, matching one
-of the string values defined below under [WS Error Codes](#ws-error-codes).
+of the string values defined below under [Error codes](#error-codes).
 
 ### Event: 'message'
 
@@ -587,7 +590,19 @@ The URL of the WebSocket server. Server clients don't have this attribute.
 Returns a `Duplex` stream that allows to use the Node.js streams API on top of a
 given `WebSocket`.
 
-## WS Error Codes
+## Environment variables
+
+### WS_NO_BUFFER_UTIL
+
+When set to a non empty value, prevents the optional `bufferutil` dependency
+from being required.
+
+### WS_NO_UTF_8_VALIDATE
+
+When set to a non empty value, prevents the optional `utf-8-validate` dependency
+from being required.
+
+## Error codes
 
 Errors emitted by the websocket may have a `.code` property, describing the
 specific type of error that has occurred:
